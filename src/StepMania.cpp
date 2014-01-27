@@ -958,8 +958,27 @@ static void ApplyLogPreferences()
 
 static LocalizedString COULDNT_OPEN_LOADING_WINDOW( "LoadingWindow", "Couldn't open any loading windows." );
 
-int sm_main(int argc, char* argv[])
+#if !defined(ANDROID)
+int sm_main(int argc, char* argv[]) {
+    Launch(argc, argv);
+}
+#elif defined(ANDROID)
+
+// Android Globals inside of Stepmania
+#include "archutils/Android/Globals.h"
+
+void android_main(android_app* state) {
+    app_dummy(); // always.
+    AndroidGlobals::ANDROID_APP_INSTANCE = state;
+
+    // Just call the method upstream and exit. This is a skeleton, not an app.
+    Launch(0, NULL);
+}
+#endif
+
+int Launch(int argc, char* argv[])
 {
+
 	RageThreadRegister thread( "Main thread" );
 	RageException::SetCleanupHandler( HandleException );
 

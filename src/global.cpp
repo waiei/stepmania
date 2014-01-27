@@ -17,7 +17,11 @@ using CrashHandler::DebugBreak;
 #endif
 
 #if defined(CRASH_HANDLER) && (defined(UNIX) || defined(MACOSX))
+#if defined(ANDROID)
+#include "archutils/Android/CrashHandler.h"
+#else
 #include "archutils/Unix/CrashHandler.h"
+#endif
 #endif
 
 void NORETURN sm_crash( const char *reason )
@@ -55,7 +59,7 @@ void NORETURN sm_crash( const char *reason )
 }
 
 /*
- * (c) 2004 Glenn Maynard
+ * (c) 2004-2014 Glenn Maynard, Renaud Lepage
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
