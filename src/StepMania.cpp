@@ -422,6 +422,10 @@ static void AdjustForChangedSystemCapabilities()
 #include "RageDisplay_GLES2.h"
 #endif
 
+#if !defined(SUPPORT_GLES2) && defined(SUPPORT_GLES2_REGAL)
+#include "RageDisplay_GLES2Regal.h"
+#endif
+
 #include "RageDisplay_Null.h"
 
 
@@ -605,6 +609,14 @@ struct VideoCardDefaults
 		true // Right now, they've got to have NVidia or ATi Cards anyway..
 	),
 	VideoCardDefaults(
+		"SHIELD",	// Hardcoding device card defaults for Android.
+		"gles2",
+		1280,720,
+		32,32,32,
+		2048,
+		true // nVidia Tegra4. Probably has AA.
+	),
+	VideoCardDefaults(
 		// Default graphics settings used for all cards that don't match above.
 		// This must be the very last entry!
 		"",
@@ -621,6 +633,8 @@ static RString GetVideoDriverName()
 {
 #if defined(_WINDOWS)
 	return GetPrimaryVideoDriverName();
+#elif defined(ANDROID)
+    return AndroidGlobals::GetVideoDriverName();
 #else
 	return "OpenGL";
 #endif
@@ -757,6 +771,12 @@ RageDisplay *CreateDisplay()
 		{
 #if defined(SUPPORT_GLES2)
 			pRet = new RageDisplay_GLES2;
+#endif
+		}
+		else if( sRenderer.CompareNoCase("gles2regal")==0 )
+		{
+#if !defined(SUPPORT_GLES2) && defined(SUPPORT_GLES2_REGAL)
+			pRet = new RageDisplay_GLES2Regal;
 #endif
 		}
 		else if( sRenderer.CompareNoCase("d3d")==0 )
@@ -962,9 +982,6 @@ int main( int argc, char* argv[] ) {
     Launch(argc, argv);
 }
 #elif defined(ANDROID)
-
-// Android Globals inside of Stepmania
-#include "archutils/Android/Globals.h"
 
 void android_main(android_app* state) {
     app_dummy(); // always.
