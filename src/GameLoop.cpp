@@ -22,6 +22,10 @@
 #include "RageTimer.h"
 #include "RageInput.h"
 
+#if defined(ANDROID)
+#include "archutils/Android/Globals.h"
+#endif
+
 static RageTimer g_GameplayTimer;
 
 static Preference<bool> g_bNeverBoostAppPriority( "NeverBoostAppPriority", false );
@@ -253,6 +257,11 @@ void GameLoop::RunGameLoop()
 	if( ChangeAppPri() )
 		HOOKS->BoostPriority();
 
+#if defined(ANDROID)
+    // The Initial Core Loop should be done and cleaned now. Reinitialize it
+    // with a new Event Execution Path that will be integrated to Rage instead
+    // of being our Android init core.
+#endif
 	while( !ArchHooks::UserQuit() )
 	{
 		if(!g_NewGame.empty())
@@ -276,6 +285,10 @@ void GameLoop::RunGameLoop()
 
 		CheckFocus();
 
+#if defined(ANDROID)
+        // Hook the Android event loop up into here.
+        AndroidGlobals::PollEventLoop();
+#endif
 		// Update SOUNDMAN early (before any RageSound::GetPosition calls), to flush position data.
 		SOUNDMAN->Update();
 
