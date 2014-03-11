@@ -1,4 +1,10 @@
 # Traditional Compilation File Stuff.
+build/
+.dirstamp
+.deps
+*.orig
+*.rej
+*~
 *.o
 *.obj
 *.a
