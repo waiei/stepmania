@@ -411,8 +411,6 @@ protected:
 	void FrameLimitAfterVsync();
 };
 
-
-
 class RenderTarget
 {
 public:
