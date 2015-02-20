@@ -4,7 +4,7 @@
 
 
 // HACK: The MSVC project doesn't generate this yet
-#if defined(_MSC_VER) || defined(__MACOSX__)
+#if defined(_MSC_VER) || defined(__MACOSX__) || defined(__ANDROID__)
 #define product_version "5.0-UNKNOWN"
 #else
 extern const char *const product_version;

@@ -1,0 +1,2 @@
+#! /bin/bash
+/opt/android-ndk/ndk-build APP_PLATFORM=android-17 NDK_PROJECT_PATH=src/ APP_BUILD_SCRIPT=src/Android.mk NDK_APPLICATION_MK=src/Application.mk NDK_MODULE_PATH=./ APP_ABI=armeabi-v7a $@

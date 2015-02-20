@@ -272,6 +272,7 @@ STEPMANIA_SRC  += ver.cpp \
                   CryptManager.cpp \
                   CryptHelpers.cpp \
                   CsvFile.cpp \
+		  CubicSpline.cpp \
                   DancingCharacters.cpp \
                   DateTime.cpp \
                   Difficulty.cpp \

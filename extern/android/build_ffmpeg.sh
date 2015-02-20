@@ -3,7 +3,7 @@
 function build_one
 {
 cd ffmpeg
-make distclean
+bash -c 'make distclean;'
 ./configure \
     --arch=${ARCH} \
     --cpu=${CPU} \
