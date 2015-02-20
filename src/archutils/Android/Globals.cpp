@@ -180,7 +180,7 @@ void AndroidGlobals::LoadingWindow::fragInitializeLoadingWindowDialog() {
     // Classret and calling
     jclass clazz = jni->GetObjectClass(ANDROID_APP_INSTANCE->activity->clazz);
     jmethodID methodID = jni->GetMethodID(clazz, "fragInitializeLoadingWindowDialog", "()V");
-    jni->CallIntMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, NULL);
+    jni->CallVoidMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, NULL);
 
     ANDROID_APP_INSTANCE->activity->vm->DetachCurrentThread();
 }
@@ -192,7 +192,7 @@ void AndroidGlobals::LoadingWindow::fragTeardownLoadingWindowDialog() {
     // Classret and calling
     jclass clazz = jni->GetObjectClass(ANDROID_APP_INSTANCE->activity->clazz);
     jmethodID methodID = jni->GetMethodID(clazz, "fragTeardownLoadingWindowDialog", "()V");
-    jni->CallIntMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, NULL);
+    jni->CallVoidMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, NULL);
 
     ANDROID_APP_INSTANCE->activity->vm->DetachCurrentThread();
 }
@@ -220,7 +220,7 @@ void AndroidGlobals::LoadingWindow::SetProgress(const int progress) {
     // Classret and calling
     jclass clazz = jni->GetObjectClass(ANDROID_APP_INSTANCE->activity->clazz);
     jmethodID methodID = jni->GetMethodID(clazz, "fragSetProgress", "(I)V");
-    jni->CallIntMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, progress);
+    jni->CallVoidMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, progress);
 
     ANDROID_APP_INSTANCE->activity->vm->DetachCurrentThread();
 }
@@ -232,7 +232,7 @@ void AndroidGlobals::LoadingWindow::SetTotalWork(const int tw) {
     // Classret and calling
     jclass clazz = jni->GetObjectClass(ANDROID_APP_INSTANCE->activity->clazz);
     jmethodID methodID = jni->GetMethodID(clazz, "fragSetTotalWork", "(I)V");
-    jni->CallIntMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, tw);
+    jni->CallVoidMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, tw);
 
     ANDROID_APP_INSTANCE->activity->vm->DetachCurrentThread();
 }
@@ -244,7 +244,7 @@ void AndroidGlobals::LoadingWindow::SetIndeterminate(bool indet) {
     // Classret and calling
     jclass clazz = jni->GetObjectClass(ANDROID_APP_INSTANCE->activity->clazz);
     jmethodID methodID = jni->GetMethodID(clazz, "fragSetIndeterminate", "(Z)V");
-    jni->CallIntMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, indet);
+    jni->CallVoidMethod(ANDROID_APP_INSTANCE->activity->clazz, methodID, indet);
 
     ANDROID_APP_INSTANCE->activity->vm->DetachCurrentThread();
 }
