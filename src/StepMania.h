@@ -34,7 +34,6 @@ int sm_main( int argc, char* argv[] );
 /** @brief Utility functions for controlling the whole game. */
 namespace StepMania
 {
-
 	void ApplyGraphicOptions();
 	void ResetPreferences();
 	void ResetGame();

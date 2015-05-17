@@ -41,7 +41,6 @@
 #define LITTLE_ENDIAN 1234
 /** @brief The macro for big endian order. */
 #define BIG_ENDIAN 4321
-
 #if defined(ENDIAN_LITTLE)
 #define BYTE_ORDER LITTLE_ENDIAN
 #elif defined(ENDIAN_BIG)

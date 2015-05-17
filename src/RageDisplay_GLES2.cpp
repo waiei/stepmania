@@ -170,7 +170,7 @@ namespace
 			GL_RGB,
 			GL_UNSIGNED_BYTE,
 		}, /* {
-			/* Paletted * /
+			/ * Paletted * /
 			GL_COLOR_INDEX8_EXT,
 			GL_COLOR_INDEX,
 			GL_UNSIGNED_BYTE,
