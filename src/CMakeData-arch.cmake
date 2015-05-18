@@ -71,6 +71,13 @@ elseif(APPLE)
   list(APPEND SMDATA_ARCH_SOUND_HPP
     "arch/Sound/RageSoundDriver_AU.h"
   )
+elseif(ANDROID)
+  list(APPEND SMDATA_ARCH_SOUND_SRC
+    "arch/Sound/RageSoundDriver_Android.cpp"
+  )
+  list(APPEND SMDATA_ARCH_SOUND_HPP
+    "arch/Sound/RageSoundDriver_Android.h"
+  )
 else() # Unix
   if (HAS_PULSE)
     list(APPEND SMDATA_ARCH_SOUND_SRC
@@ -173,6 +180,13 @@ elseif(APPLE)
   list(APPEND SMDATA_ARCH_MEMORY_HPP
     "arch/MemoryCard/MemoryCardDriverThreaded_MacOSX.h"
   )
+elseif(ANDROID)
+  #list(APPEND SMDATA_ARCH_MEMORY_SRC
+  #  "arch/MemoryCard/MemoryCardDriver_Android.cpp"
+  #)
+  #list(APPEND SMDATA_ARCH_MEMORY_HPP
+  #  "arch/MemoryCard/MemoryCardDriver_Android.h"
+  #)
 elseif(LINUX)
   list(APPEND SMDATA_ARCH_MEMORY_SRC
     "arch/MemoryCard/MemoryCardDriverThreaded_Linux.cpp"
@@ -204,6 +218,17 @@ elseif(APPLE)
   )
   list(APPEND SMDATA_ARCH_LOWLEVEL_HPP
     "arch/LowLevelWindow/LowLevelWindow_MacOSX.h"
+  )
+elseif(ANDROID)
+  list(APPEND SMDATA_ARCH_LOWLEVEL_SRC
+    "arch/LowLevelWindow/LowLevelWindow_EGL.cpp"
+    "arch/LowLevelWindow/EGLProviders/EGLProvider.cpp"
+    "arch/LowLevelWindow/EGLProviders/EGLProvider_Android.cpp"
+  )
+  list(APPEND SMDATA_ARCH_LOWLEVEL_HPP
+    "arch/LowLevelWindow/LowLevelWindow_EGL.h"
+    "arch/LowLevelWindow/EGLProviders/EGLProvider.h"
+    "arch/LowLevelWindow/EGLProviders/EGLProvider_Android.h"
   )
 else(UNIX)
   if (X11_FOUND)
@@ -243,14 +268,25 @@ else()
     list(APPEND SMDATA_ARCH_LOADING_HPP
       "arch/LoadingWindow/LoadingWindow_MacOSX.h"
     )
-  elseif(LINUX)
-    if (GTK2_FOUND)
+  else()
+    if(ANDROID)
       list(APPEND SMDATA_ARCH_LOADING_SRC
-        "arch/LoadingWindow/LoadingWindow_Gtk.cpp"
+        "arch/LoadingWindow/LoadingWindow_Android.cpp"
       )
       list(APPEND SMDATA_ARCH_LOADING_HPP
-        "arch/LoadingWindow/LoadingWindow_Gtk.h"
+        "arch/LoadingWindow/LoadingWindow_Android.h"
       )
+    else()
+      if(LINUX)
+        if (GTK2_FOUND)
+          list(APPEND SMDATA_ARCH_LOADING_SRC
+            "arch/LoadingWindow/LoadingWindow_Gtk.cpp"
+          )
+          list(APPEND SMDATA_ARCH_LOADING_HPP
+            "arch/LoadingWindow/LoadingWindow_Gtk.h"
+          )
+        endif()
+      endif()
     endif()
   endif()
 endif()
@@ -349,27 +385,36 @@ elseif(APPLE)
     "arch/InputHandler/InputHandler_MacOSX_HID.h"
   )
 else() # Unix/Linux
-  if (LINUX)
-    list(APPEND SMDATA_ARCH_INPUT_SRC
-      "arch/InputHandler/LinuxInputManager.cpp"
-      "arch/InputHandler/InputHandler_Linux_Joystick.cpp"
-      "arch/InputHandler/InputHandler_Linux_Event.cpp"
-      "arch/InputHandler/InputHandler_Linux_PIUIO.cpp"
-    )
-    list(APPEND SMDATA_ARCH_INPUT_SRC
-      "arch/InputHandler/LinuxInputManager.h"
-      "arch/InputHandler/InputHandler_Linux_Joystick.h"
-      "arch/InputHandler/InputHandler_Linux_Event.h"
-      "arch/InputHandler/InputHandler_Linux_PIUIO.h"
-    )
-    if(WITH_TTY)
+  if(ANDROID)
+  list(APPEND SMDATA_ARCH_INPUT_SRC
+    "arch/InputHandler/InputHandler_Android_Gamepad.cpp"
+  )
+  list(APPEND SMDATA_ARCH_INPUT_HPP
+    "arch/InputHandler/InputHandler_Android_Gamepad.h"
+  )
+  else()
+    if (LINUX)
       list(APPEND SMDATA_ARCH_INPUT_SRC
-        "arch/InputHandler/InputHandler_Linux_tty.cpp"
+        "arch/InputHandler/LinuxInputManager.cpp"
+        "arch/InputHandler/InputHandler_Linux_Joystick.cpp"
+        "arch/InputHandler/InputHandler_Linux_Event.cpp"
+        "arch/InputHandler/InputHandler_Linux_PIUIO.cpp"
       )
-      list(APPEND SMDATA_ARCH_INPUT_HPP
-        "arch/InputHandler/InputHandler_Linux_tty.h"
-        "arch/InputHandler/InputHandler_Linux_tty_keys.h"
+      list(APPEND SMDATA_ARCH_INPUT_SRC
+        "arch/InputHandler/LinuxInputManager.h"
+        "arch/InputHandler/InputHandler_Linux_Joystick.h"
+        "arch/InputHandler/InputHandler_Linux_Event.h"
+        "arch/InputHandler/InputHandler_Linux_PIUIO.h"
       )
+      if(WITH_TTY)
+        list(APPEND SMDATA_ARCH_INPUT_SRC
+          "arch/InputHandler/InputHandler_Linux_tty.cpp"
+        )
+        list(APPEND SMDATA_ARCH_INPUT_HPP
+          "arch/InputHandler/InputHandler_Linux_tty.h"
+          "arch/InputHandler/InputHandler_Linux_tty_keys.h"
+        )
+      endif()
     endif()
   endif()
   if(X11_FOUND)
@@ -431,12 +476,21 @@ if(NOT APPLE)
       "arch/ArchHooks/ArchHooks_Win32.h"
     )
   else(WIN32)
-    list(APPEND SMDATA_ARCH_HOOKS_SRC
-      "arch/ArchHooks/ArchHooks_Unix.cpp"
-    )
-    list(APPEND SMDATA_ARCH_HOOKS_HPP
-      "arch/ArchHooks/ArchHooks_Unix.h"
-  )
+    if(ANDROID)
+      list(APPEND SMDATA_ARCH_HOOKS_SRC
+        "arch/ArchHooks/ArchHooks_Android.cpp"
+      )
+      list(APPEND SMDATA_ARCH_HOOKS_HPP
+        "arch/ArchHooks/ArchHooks_Android.h"
+      )
+    else(ANDROID)
+      list(APPEND SMDATA_ARCH_HOOKS_SRC
+        "arch/ArchHooks/ArchHooks_Unix.cpp"
+      )
+      list(APPEND SMDATA_ARCH_HOOKS_HPP
+        "arch/ArchHooks/ArchHooks_Unix.h"
+      )
+    endif()
   endif(WIN32)
 else(NOT APPLE)
   list(APPEND SMDATA_ARCH_HOOKS_SRC

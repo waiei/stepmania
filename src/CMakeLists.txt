@@ -148,7 +148,7 @@ list(APPEND SMDATA_ALL_FILES_HPP
   ${SMDATA_FILE_TYPES_HPP}
 )
 
-if(NOT APPLE)
+if(NOT APPLE AND NOT ANDROID)
   list(APPEND SMDATA_ALL_FILES_SRC "Main.cpp")
   source_group("" FILES "Main.cpp")
 endif()

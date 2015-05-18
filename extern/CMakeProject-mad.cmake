@@ -28,6 +28,10 @@ list(APPEND MAD_HPP
   "mad-0.15.1b/version.h"
 )
 
+if(ANDROID)
+  list(APPEND MAD_HPP "mad-0.15.1b/mad_android/config.h")
+endif(ANDROID)
+
 source_group("" FILES ${MAD_SRC} ${MAD_HPP})
 
 add_library("mad" ${MAD_SRC} ${MAD_HPP})

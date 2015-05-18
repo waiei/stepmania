@@ -455,7 +455,7 @@ LOCAL_CFLAGS := -DANDROID -DCPU_ARM -DENDIAN_LITTLE -DENDIAN_32BITWORD
 LOCAL_CFLAGS += -DANDROID_TEST -finline-limit=300 -fno-exceptions
 # Comment out the previous line if we're not doing a testbuild.
 
-LOCAL_LDLIBS    := -llog -landroid -lz -lEGL -lGLESv2 -lOpenSLES -ldl -lm
+LOCAL_LDLIBS    := -ldl -llog -landroid -lEGL -lGLESv2 -lz  -lOpenSLES -lm
 
 LOCAL_STATIC_LIBRARIES := jsoncpp libtomcrypt libtommath android_native_app_glue \
                           pcre ndk_helper lua png libmad libvorbis libjpeg \

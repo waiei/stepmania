@@ -13,7 +13,7 @@ include(CMakeProject-png.cmake)
 
 if (NOT MSVC)
   include(CMakeProject-jpeg.cmake)
-  if (APPLE)
+  if (APPLE OR ANDROID)
     include(CMakeProject-mad.cmake)
   endif()
 endif()

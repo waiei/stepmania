@@ -1,12 +1,16 @@
+
+# Include the macros and functions.
+include(${CMAKE_CURRENT_LIST_DIR}/CMake/CMakeMacros.cmake)
+
 # Set up helper variables for future configuring.
-set(SM_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
-set(SM_EXTERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern")
-set(SM_BUNDLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bundle")
-set(SM_XCODE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Xcode")
-set(SM_PROGRAM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Program")
-set(SM_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Build")
-set(SM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SM_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(SM_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/CMake")
+set(SM_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/extern")
+set(SM_BUNDLE_DIR "${CMAKE_CURRENT_LIST_DIR}/bundle")
+set(SM_XCODE_DIR "${CMAKE_CURRENT_LIST_DIR}/Xcode")
+set(SM_PROGRAM_DIR "${CMAKE_CURRENT_LIST_DIR}/Program")
+set(SM_BUILD_DIR "${CMAKE_CURRENT_LIST_DIR}/Build")
+set(SM_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/src")
+set(SM_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 # TODO: Reconsile the OS dependent naming scheme.
 if (WIN32 OR APPLE)
@@ -34,10 +38,16 @@ else()
   set(BSD FALSE)
 endif()
 
-# Allow for finding our libraries in a standard location.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules/")
+if (CMAKE_SYSTEM_NAME MATCHES "Android")
+  set(ANDROID TRUE)
+else()
+  set(ANDROID FALSE)
+endif()
 
-include("CMake/DefineOptions.cmake")
+# Allow for finding our libraries in a standard location.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}" "${CMAKE_CURRENT_LIST_DIR}/CMake/Modules/")
+
+include("${CMAKE_CURRENT_LIST_DIR}/CMake/DefineOptions.cmake")
 
 # Set up version numbers according to the new scheme.
 set(SM_VERSION_MAJOR 5)
@@ -239,7 +249,11 @@ elseif(LINUX)
   if (${Threads_FOUND})
     set(HAS_PTHREAD TRUE)
   else()
-    set(HAS_PTHREAD FALSE)
+    if(ANDROID)
+      set(HAS_PTHREAD FALSE)
+    else()
+      set(HAS_PTHREAD FALSE)
+    endif()
   endif()
 
   find_package(yasm)
@@ -337,12 +351,5 @@ elseif(LINUX)
 
 endif()
 
-
-# The external libraries need to be included.
-add_subdirectory(extern)
-
-# The internal libraries and eventual executable to be used.
-add_subdirectory(src)
-
 # Define installer based items for cpack.
-include("CMake/CPackSetup.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CMake/CPackSetup.cmake")
