@@ -36,11 +36,11 @@ else()
 endif()
 
 # Allow for finding our libraries in a standard location.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}" "${CMAKE_CURRENT_LIST_DIR}/CMake/Modules/")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}" "${SM_CMAKE_DIR}/Modules/")
 
-include("${CMAKE_CURRENT_LIST_DIR}/CMake/DefineOptions.cmake")
+include("${SM_CMAKE_DIR}/DefineOptions.cmake")
 
-include("${CMAKE_CURRENT_LIST_DIR}/CMake/SMDefs.cmake")
+include("${SM_CMAKE_DIR}/SMDefs.cmake")
 
 # Put the predefined targets in separate groups.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -84,16 +84,21 @@ include(CheckFunctionExists)
 include(CheckSymbolExists)
 include(CheckCXXSymbolExists)
 
-if (WIN32 AND MSVC)
-  check_function_exists(_mkdir HAVE__MKDIR)
-  check_function_exists(_snprintf HAVE__SNPRINTF)
-else()
-  check_function_exists(fcntl HAVE_FCNTL)
-  check_function_exists(fork HAVE_FORK)
-  check_function_exists(mkdir HAVE_MKDIR)
-  check_function_exists(snprintf HAVE_SNPRINTF)
-  check_function_exists(waitpid HAVE_WAITPID)
-endif()
+# Mostly Windows functions.
+check_function_exists(_mkdir HAVE__MKDIR)
+check_cxx_symbol_exists(_snprintf cstdio HAVE__SNPRINTF)
+#check_function_exists(_snprintf HAVE__SNPRINTF)
+
+# Mostly non-Windows functions.
+check_function_exists(fcntl HAVE_FCNTL)
+check_function_exists(fork HAVE_FORK)
+check_function_exists(mkdir HAVE_MKDIR)
+#check_function_exists(snprintf HAVE_SNPRINTF)
+check_cxx_symbol_exists(snprintf cstdio HAVE_SNPRINTF)
+check_function_exists(waitpid HAVE_WAITPID)
+
+
+# Mostly universal symbols.
 check_cxx_symbol_exists(powf cmath HAVE_POWF)
 check_cxx_symbol_exists(sqrtf cmath HAVE_SQRTF)
 check_cxx_symbol_exists(sinf cmath HAVE_SINF)
@@ -105,12 +110,28 @@ check_cxx_symbol_exists(roundf cmath HAVE_ROUNDF)
 check_cxx_symbol_exists(lrintf cmath HAVE_LRINTF)
 check_cxx_symbol_exists(strtof cstdlib HAVE_STRTOF)
 check_symbol_exists(M_PI math.h HAVE_M_PI)
+check_symbol_exists(size_t stddef.h HAVE_SIZE_T_STDDEF)
+check_symbol_exists(size_t stdlib.h HAVE_SIZE_T_STDLIB)
+check_symbol_exists(size_t stdio.h HAVE_SIZE_T_STDIO)
+check_symbol_exists(posix_fadvise fcntl.h HAVE_POSIX_FADVISE)
 
 # Checks to make it easier to work with 32-bit/64-bit builds if required.
 include(CheckTypeSize)
+check_type_size(int16_t SIZEOF_INT16_T)
+check_type_size(uint16_t SIZEOF_UINT16_T)
+check_type_size(u_int16_t SIZEOF_U_INT16_T)
+check_type_size(int32_t SIZEOF_INT32_T)
+check_type_size(uint32_t SIZEOF_UINT32_T)
+check_type_size(u_int32_t SIZEOF_U_INT32_T)
+check_type_size(int64_t SIZEOF_INT64_T)
+check_type_size(char SIZEOF_CHAR)
+check_type_size("unsigned char" SIZEOF_UNSIGNED_CHAR)
 check_type_size(short SIZEOF_SHORT)
+check_type_size("unsigned short" SIZEOF_UNSIGNED_SHORT)
 check_type_size(int SIZEOF_INT)
+check_type_size("unsigned int" SIZEOF_UNSIGNED_INT)
 check_type_size(long SIZEOF_LONG)
+check_type_size("unsigned long" SIZEOF_UNSIGNED_LONG)
 check_type_size("long long" SIZEOF_LONG_LONG)
 check_type_size(float SIZEOF_FLOAT)
 check_type_size(double SIZEOF_DOUBLE)
@@ -127,17 +148,71 @@ else()
   set(ENDIAN_LITTLE 1)
 endif()
 
+check_compile_features("${SM_CMAKE_DIR}/TestCode" "${SM_CMAKE_DIR}/TestCode/test_prototype.c" "Checking for function prototype capabilities" "found" "not found" SM_IGNORED_PROTOTYPE_CALL FALSE)
+
+if(NOT SM_IGNORED_PROTOTYPE_CALL)
+  set(HAVE_PROTOTYPES TRUE)
+endif()
+
+check_compile_features("${SM_CMAKE_DIR}/TestCode" "${SM_CMAKE_DIR}/TestCode/test_external.c" "Checking for external name shortening requirements" "not needed" "needed" SM_BUILT_LONG_NAME TRUE)
+
+if (NOT SM_BUILT_LONG_NAME)
+  set(NEED_SHORT_EXTERNAL_NAMES 1)
+endif()
+
+check_compile_features("${SM_CMAKE_DIR}/TestCode" "${SM_CMAKE_DIR}/TestCode/test_broken.c" "Checking if incomplete types are broken." "not broken" "broken" SM_BUILT_INCOMPLETE_TYPE FALSE)
+
+if (SM_BUILT_INCOMPLETE_TYPE)
+  set(INCOMPLETE_TYPES_BROKEN 1)
+endif()
+
 if (WITH_VERSION_INFO)
   set(HAVE_VERSION_INFO 1)
 endif()
 
-configure_file("${SM_SRC_DIR}/config.in.hpp" "${SM_SRC_DIR}/generated/config.hpp")
-
 # Dependencies go here.
+include(ExternalProject)
+
+if(NOT WITH_GPL_LIBS)
+  message("Disabling GPL exclusive libraries: no MP3 support.")
+  set(WITH_MP3 OFF)
+endif()
+
+if(WITH_WAV)
+  # TODO: Identify which headers to check for ensuring this will always work.
+  set(HAS_WAV TRUE)
+endif()
+
+if(WITH_MP3)
+  if(WIN32 OR MACOSX)
+    set(HAS_MP3 TRUE)
+  else()
+    find_package(Mad)
+    if(NOT LIBMAD_FOUND)
+      message(FATAL_ERROR "Libmad library not found. If you wish to skip mp3 support, set WITH_MP3 to OFF when configuring.")
+    else()
+      set(HAS_MP3 TRUE)
+    endif()
+  endif()
+endif()
+
+if(WITH_OGG)
+  if(WIN32 OR MACOSX)
+    set(HAS_OGG TRUE)
+  else()
+    find_package(Ogg)
+    find_package(Vorbis)
+    find_package(VorbisFile)
+
+    if(NOT (OGG_FOUND AND VORBIS_FOUND AND VORBISFILE_FOUND) )
+      message(FATAL_ERROR "Not all vorbis libraries were found. If you wish to skip vorbis support, set WITH_OGG to OFF when configuring.")
+    else()
+      set(HAS_OGG TRUE)
+    endif()
+  endif()
+endif()
 
 if(WIN32)
-  set(HAS_OGG TRUE)
-  set(HAS_MP3 TRUE)
   set(SYSTEM_PCRE_FOUND FALSE)
   find_package(DirectX REQUIRED)
 
@@ -162,8 +237,6 @@ if(WIN32)
   )
   get_filename_component(LIB_AVUTIL ${LIB_AVUTIL} NAME)
 elseif(MACOSX)
-  set(HAS_OGG TRUE)
-  set(HAS_MP3 TRUE)
   set(SYSTEM_PCRE_FOUND FALSE)
   set(WITH_CRASH_HANDLER TRUE)
   # Apple Archs needs to be 32-bit for now.
@@ -202,13 +275,6 @@ elseif(MACOSX)
     MAC_FRAME_QUICKTIME
   )
 elseif(LINUX)
-  include(ExternalProject)
-
-  if(NOT WITH_GPL_LIBS)
-    message("Disabling GPL exclusive libraries: no MP3 support.")
-    set(WITH_MP3 OFF)
-  endif()
-
   if(WITH_GTK2)
     find_package("GTK2" 2.0)
     if (${GTK2_FOUND})
@@ -258,27 +324,6 @@ elseif(LINUX)
     set(HAS_XRANDR TRUE)
   else()
     set(HAX_XRANDR FALSE)
-  endif()
-
-  if (WITH_OGG)
-    find_package(Ogg)
-    find_package(Vorbis)
-    find_package(VorbisFile)
-
-    if(NOT (OGG_FOUND AND VORBIS_FOUND AND VORBISFILE_FOUND) )
-      message(FATAL_ERROR "Not all vorbis libraries were found. If you wish to skip vorbis support, set WITH_OGG to OFF when configuring.")
-    else()
-      set(HAS_OGG TRUE)
-    endif()
-  endif()
-
-  if (WITH_MP3)
-    find_package(Mad)
-    if(NOT LIBMAD_FOUND)
-      message(FATAL_ERROR "Libmad library not found. If you wish to skip mp3 support, set WITH_MP3 to OFF when configuring.")
-    else()
-      set(HAS_MP3 TRUE)
-    endif()
   endif()
 
   find_package(PulseAudio)
@@ -409,6 +454,8 @@ elseif(LINUX)
   endif()
 
 endif()
+
+configure_file("${SM_SRC_DIR}/config.in.hpp" "${SM_SRC_DIR}/generated/config.hpp")
 
 # Define installer based items for cpack.
 include("${CMAKE_CURRENT_LIST_DIR}/CMake/CPackSetup.cmake")

@@ -10,6 +10,10 @@ add_custom_command(
   COMMAND VersionUpdater ${SM_SRC_DIR}/generated/verstub.cpp
   DEPENDS VersionUpdater
 )
+
+# Add the mapconv program of the past to allow for debugging information.
+include("CMakeProject-mapconv.cmake")
+
 else()
 # Version Stub generation. Needs fixing on Windows.
 add_custom_command(
@@ -264,7 +268,6 @@ list(APPEND SM_WINDOWS_PROGRAM_DLLS
   "${SM_PROGRAM_DIR}/avcodec-53.dll"
   "${SM_PROGRAM_DIR}/avformat-53.dll"
   "${SM_PROGRAM_DIR}/avutil-51.dll"
-  "${SM_PROGRAM_DIR}/jpeg.dll"
   "${SM_PROGRAM_DIR}/msvcp100.dll"
   "${SM_PROGRAM_DIR}/msvcp110.dll"
   "${SM_PROGRAM_DIR}/msvcr100.dll"
@@ -289,6 +292,16 @@ if(WIN32)
     RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${SM_PROGRAM_DIR}"
     RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${SM_PROGRAM_DIR}"
   )
+  
+  if(MSVC)
+    # Allow for getting a virtualdub stack trace.    
+    
+    add_custom_command(TARGET "${SM_EXE_NAME}"
+      POST_BUILD
+      COMMAND "mapconv" "${SM_PROGRAM_DIR}/$<$<CONFIG:DEBUG>:${SM_NAME_DEBUG}>$<$<CONFIG:MINSIZEREL>:${SM_NAME_MINSIZEREL}>$<$<CONFIG:RELWITHDEBINFO>:${SM_NAME_RELWITHDEBINFO}>$<$<CONFIG:RELEASE>:${SM_NAME_RELEASE}>.map" "${SM_PROGRAM_DIR}/$<$<CONFIG:DEBUG>:${SM_NAME_DEBUG}>$<$<CONFIG:MINSIZEREL>:${SM_NAME_MINSIZEREL}>$<$<CONFIG:RELWITHDEBINFO>:${SM_NAME_RELWITHDEBINFO}>$<$<CONFIG:RELEASE>:${SM_NAME_RELEASE}>.vdi"
+      COMMENT "Generating file to allow for easier stack traces."
+    )
+  endif()
 elseif(APPLE)
   set_target_properties("${SM_EXE_NAME}" PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${SM_ROOT_DIR}"
@@ -424,26 +437,43 @@ list(APPEND SMDATA_LINK_LIB
   "tommath"
   "zlib"
   "jsoncpp"
-  "mad"
   "png"
   "glew"
   "jpeg"
 )
+
+if (HAS_MP3)
+  list(FIND SMDATA_LINK_LIB "jsoncpp" JSON_INDEX)
+  if (WIN32 OR MACOSX)
+    list(INSERT SMDATA_LINK_LIB ${JSON_INDEX} "mad")
+  else()
+    list(INSERT SMDATA_LINK_LIB ${JSON_INDEX} ${LIBMAD_LIBRARY})
+  endif()
+endif()
 
 if (NOT SYSTEM_PCRE_FOUND)
   list(APPEND SMDATA_LINK_LIB "pcre")
 endif()
 
 if (WIN32)
+  
   list(APPEND SMDATA_LINK_LIB
     # The misc libraries are here.
     "${LIB_SWSCALE}"
     "${LIB_AVCODEC}"
     "${LIB_AVFORMAT}"
     "${LIB_AVUTIL}"
-    "ogg_static.lib"
-    "vorbis_static.lib"
-    "vorbisfile_static.lib"
+  )
+  
+  if (WITH_OGG)
+    list(APPEND SMDATA_LINK_LIB
+      "ogg"
+      "vorbis"
+      "vorbisfile"
+    )
+  endif()
+  
+  list(APPEND SMDATA_LINK_LIB
     "dbghelp.lib"
     "setupapi.lib"
     "hid.lib"
@@ -453,8 +483,6 @@ if (WIN32)
   
   sm_add_link_flag("${SM_EXE_NAME}" "/LIBPATH:\"${DIRECTX_LIBRARY_DIR}\"")
   sm_add_link_flag("${SM_EXE_NAME}" "/LIBPATH:\"${SM_EXTERN_DIR}/ffmpeg/lib\"")
-  sm_add_link_flag("${SM_EXE_NAME}" "/LIBPATH:\"${SM_EXTERN_DIR}/libjpeg\"")
-  sm_add_link_flag("${SM_EXE_NAME}" "/LIBPATH:\"${SM_EXTERN_DIR}/vorbis/win32\"")
   sm_add_link_flag("${SM_EXE_NAME}" "/LIBPATH:\"${SM_SRC_DIR}/archutils/Win32/ddk\"")
   sm_add_link_flag("${SM_EXE_NAME}" "/ERRORREPORT:SEND")
   sm_add_link_flag("${SM_EXE_NAME}" "/MAPINFO:EXPORTS")
@@ -467,15 +495,14 @@ if (WIN32)
   set_target_properties("${SM_EXE_NAME}" PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB:msvcrt.lib")
   set_target_properties("${SM_EXE_NAME}" PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
   set_target_properties("${SM_EXE_NAME}" PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+  
 elseif(APPLE)
   # The following were removed from SMDATA_LINK_LIB to "match" StepMania's pbxproj.
 #    ${MAC_FRAME_APPKIT}
 #    ${MAC_FRAME_FOUNDATION}
 #    "ffmpeg"
-  
-  # TODO: Adjust the target when StepMania-Data returns.
-  # TODO: Find a cleaner way besides just setting to wipe the slate clean.
-  set(SMDATA_LINK_LIB
+
+  list(INSERT SMDATA_LINK_LIB 0
     ${MAC_FRAME_ACCELERATE}
     ${MAC_FRAME_CARBON}
     ${MAC_FRAME_COCOA}
@@ -490,16 +517,9 @@ elseif(APPLE)
     "ogg"
     "theora"
     "vorbis"
-    "lua-5.1"
-    "tomcrypt"
-    "tommath"
-    "zlib"
-    "jsoncpp"
-    "mad"
-    "png"
-    "glew"
+  )
+  list(APPEND SMDATA_LINK_LIB
     "pcre"
-    "jpeg"
     "avcodec"
     "avdevice"
     "avfilter"
@@ -543,12 +563,6 @@ else() # Unix / Linux
       "${VORBISFILE_LIBRARY}"
       "${VORBIS_LIBRARY}"
       "${OGG_LIBRARY}"
-    )
-  endif()
-
-  if(HAS_MP3)
-    list(APPEND SMDATA_LINK_LIB
-      "${LIBMAD_LIBRARY}"
     )
   endif()
 
@@ -610,7 +624,6 @@ target_link_libraries("${SM_EXE_NAME}" ${SMDATA_LINK_LIB})
 list(APPEND SM_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   "${SM_SRC_DIR}/generated"
-  "${SM_EXTERN_DIR}/vorbis"
 )
 if(NOT APPLE)
   list(APPEND SM_INCLUDE_DIRS
@@ -619,11 +632,22 @@ if(NOT APPLE)
     "${SM_EXTERN_DIR}/zlib"
   )
   if(MSVC)
+    if (WITH_OGG)
+      list(APPEND SM_INCLUDE_DIRS
+        "${SM_EXTERN_DIR}/newogg/include"
+        "${SM_EXTERN_DIR}/newvorbis/lib"
+        "${SM_EXTERN_DIR}/newvorbis/include"
+      )
+    endif()
     list(APPEND SM_INCLUDE_DIRS
       "${SM_EXTERN_DIR}/ffmpeg/include"
-      "${SM_EXTERN_DIR}/libjpeg"
     )
   else()
+    if(WITH_OGG)
+      list(APPEND SM_INCLUDE_DIRS
+        "${SM_EXTERN_DIR}/vorbis"
+      )
+    endif()
     list(APPEND SM_INCLUDE_DIRS
       "${JPEG_INCLUDE_DIR}"
     )
@@ -649,7 +673,12 @@ if(NOT APPLE)
     endif()
   endif()
 else()
-  list(APPEND SM_INCLUDE_DIRS
+  if(WITH_OGG)
+    list(APPEND SM_INCLUDE_DIRS
+      "${SM_EXTERN_DIR}/vorbis"
+    )
+  endif()
+list(APPEND SM_INCLUDE_DIRS
     "${SM_XCODE_DIR}/ffmpeg/include"
     "archutils/Unix"
   )
@@ -682,7 +711,6 @@ if(NOT APPLE)
     install(FILES "${SM_PROGRAM_DIR}/avcodec-53.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/avformat-53.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/avutil-51.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
-    install(FILES "${SM_PROGRAM_DIR}/jpeg.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/msvcp100.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/msvcp110.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/msvcr100.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
@@ -691,6 +719,7 @@ if(NOT APPLE)
     install(FILES "${SM_PROGRAM_DIR}/swscale-2.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/vccorlib110.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
     install(FILES "${SM_PROGRAM_DIR}/zlib1.dll" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
+    install(FILES "${SM_PROGRAM_DIR}/StepMania.vdi" DESTINATION "${SM_FULL_INSTALLATION_PATH}")
 
     # foreach(SM_WINDOW_DLL "${SM_WINDOWS_PROGRAM_DLLS}")
     #   install(FILES "${SM_WINDOW_DLL}" DESTINATION "${SM_INSTALL_DESTINATION}")

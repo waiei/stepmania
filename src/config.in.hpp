@@ -81,6 +81,9 @@
 /* Defined to 1 if the underlying system provides the M_PI constant. */
 #cmakedefine HAVE_M_PI 1
 
+/* Defined to 1 if the underlying system provides the posix_fadvise function. */
+#cmakedefine HAVE_POSIX_FADVISE 1
+
 /* Provide a fallback if intptr_t is not defined. */
 #cmakedefine HAVE_SIZEOF_INTPTR_T 1
 #if !defined(HAVE_SIZEOF_INTPTR_T)
@@ -114,6 +117,15 @@ typedef long ssize_t;
 /* Defined to 1 if version information will be printed out. */
 #cmakedefine HAVE_VERSION_INFO 1
 
+/* Defined to 1 if compiling with WAV support. */
+#cmakedefine HAS_WAV 1
+
+/* Defined to 1 if compiling with MP3 support. */
+#cmakedefine HAS_MP3 1
+
+/* Defined to 1 if compiling with OGG support. */
+#cmakedefine HAS_OGG 1
+
 #if defined(__GNUC__)
 /** @brief Define a macro to tell the compiler that a function has printf()
  * semantics, to aid warning output. */
@@ -127,9 +139,10 @@ typedef long ssize_t;
 #endif
 
 /* Ensure we have a function that acts like a size limited sprintf. */
-#if defined(HAVE__SNPRINTF)
+#if defined(HAVE_SNPRINTF)
+#elif defined(HAVE__SNPRINTF)
 #define snprintf _snprintf
-#elif !defined(HAVE_SNPRINTF)
+#else
 #error "No size limited sprintf function available. Aborting."
 #endif
 

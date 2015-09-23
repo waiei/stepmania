@@ -22,7 +22,7 @@ option(WITH_JPEG "Build with JPEG Image Support." ON)
 option(WITH_FULL_RELEASE "Build as a proper, full release." OFF)
 
 # Turn this on to compile tomcrypt with no assembly data. This is a portable mode.
-option(WITH_PORTABLE_TOMCRYPT "Build with assembly/free tomcrypt, making it portable." OFF)
+option(WITH_PORTABLE_TOMCRYPT "Build with assembly/free tomcrypt, making it portable." ON)
 
 # Turn this on to not use the ROLC assembly featurs of tomcrypt.
 # If WITH_PORTABLE_TOMCRYPT is ON, this will automatically have no effect.
@@ -30,6 +30,16 @@ option(WITH_NO_ROLC_TOMCRYPT "Build without the ROLC assembly instructions for t
 
 # Turn this option off to not use the GPL exclusive components.
 option(WITH_GPL_LIBS "Build with GPL libraries." ON)
+
+# Turn this option off to disable using WAV files with the game.
+# Note that it is recommended to keep this on.
+option(WITH_WAV "Build with WAV Support." ON)
+
+# Turn this option off to disable using MP3 files with the game.
+option(WITH_MP3 "Build with MP3 Support." ON)
+
+# Turn this option off to disable using OGG files with the game.
+option(WITH_OGG "Build with OGG/Vorbis Support." ON)
 
 if(WIN32)
   option(WITH_MINIMAID "Build with Minimaid Lights Support." ON)
@@ -42,8 +52,6 @@ elseif(LINUX)
     option(WITH_PROFILING "Build with Profiling Support." OFF)
     option(WITH_GLES2 "Build with OpenGL ES 2.0 Support." ON)
     option(WITH_GTK2 "Build with GTK2 Support." ON)
-    option(WITH_OGG "Build with OGG/Vorbis Support." ON)
-    option(WITH_MP3 "Build with MP3 Support." ON)
     option(WITH_PARALLEL_PORT "Build with Parallel Lights I/O Support." OFF)
     option(WITH_CRASH_HANDLER "Build with Crash Handler Support." ON)
 endif()
